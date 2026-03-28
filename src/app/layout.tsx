@@ -15,8 +15,8 @@ const displayFont = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "LinkedIn Initializr",
-  description: "Turn rough career notes into polished LinkedIn-style copy.",
+  title: "딸깍톤 | Ddalggakton",
+  description: "이직과 취준을 준비하는 사용자의 평범한 정보를 전문적으로 재포장하는 웹앱.",
 };
 
 export default function RootLayout({
@@ -26,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="ko"
       className={`${bodyFont.variable} ${displayFont.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
