@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 
 type CareerLevel = "entry" | "experienced";
-type JobRole = "frontend" | "backend" | "designer" | "pm" | "ai";
+type BuiltInJobRole = "frontend" | "backend" | "designer" | "pm" | "ai";
+type JobRole = BuiltInJobRole | "custom";
 type Tone = "meme" | "linkedin" | "resume";
 type ResultView = "render" | "markdown" | "text";
 
@@ -55,6 +56,7 @@ const jobOptions: Array<{ value: JobRole; label: string }> = [
   { value: "designer", label: "디자이너" },
   { value: "pm", label: "PM" },
   { value: "ai", label: "AI" },
+  { value: "custom", label: "직접 입력" },
 ];
 
 const toneOptions: Array<{ value: Tone; label: string }> = [
@@ -63,7 +65,7 @@ const toneOptions: Array<{ value: Tone; label: string }> = [
   { value: "resume", label: "이력서톤" },
 ];
 
-const roleExamples: Record<JobRole, string[]> = {
+const roleExamples: Record<BuiltInJobRole, string[]> = {
   frontend: [
     "리액트로 토이프로젝트 만들어봄",
     "노션 클론 만들다가 포기함",
@@ -109,10 +111,16 @@ const commonExamples = [
   "개발 유튜버 구독만 100개",
 ];
 
+const customRoleExamples = [
+  "프로젝트 하나 끝까지 못 밀어봄",
+  "배포 잘못해서 서비스 깨뜨려봄",
+  "협업 중 커뮤니케이션 꼬여서 다시 정리함",
+];
+
 const presets: Array<{
   label: string;
   careerLevel: CareerLevel;
-  jobRole: JobRole;
+  jobRole: BuiltInJobRole;
   tone: Tone;
   rawInput: string;
 }> = [
@@ -187,6 +195,7 @@ function getResultHeading(result: ResultPayload, tone: Tone) {
 export default function Home() {
   const [careerLevel, setCareerLevel] = useState<CareerLevel>("entry");
   const [jobRole, setJobRole] = useState<JobRole>("frontend");
+  const [customJobRole, setCustomJobRole] = useState("");
   const [tone, setTone] = useState<Tone>("meme");
   const [rawInput, setRawInput] = useState("");
   const [githubId, setGithubId] = useState("");
@@ -210,6 +219,13 @@ export default function Home() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const parsedLines = useMemo(() => parseLines(rawInput), [rawInput]);
+  const resolvedJobRole = useMemo(() => {
+    if (jobRole === "custom") {
+      return customJobRole.trim();
+    }
+
+    return jobOptions.find((option) => option.value === jobRole)?.label ?? "";
+  }, [customJobRole, jobRole]);
   const funnelStep = Math.min(step, 3);
   const progressValue = funnelStep === 1 ? 33 : funnelStep === 2 ? 66 : 100;
   const resultHeading = useMemo(
@@ -258,7 +274,7 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           careerLevel,
-          jobRole,
+          jobRole: resolvedJobRole,
           tone,
           rawInput,
           githubId,
@@ -298,6 +314,7 @@ export default function Home() {
   function applyPreset(preset: (typeof presets)[number]) {
     setCareerLevel(preset.careerLevel);
     setJobRole(preset.jobRole);
+    setCustomJobRole("");
     setTone(preset.tone);
     setRawInput(preset.rawInput);
     setGithubId("");
@@ -440,6 +457,20 @@ export default function Home() {
                 </select>
               </label>
 
+              {jobRole === "custom" && (
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium uppercase tracking-[0.14em] text-[#75ff5a]">
+                    직접 입력 직무
+                  </span>
+                  <input
+                    className="w-full border border-[#75ff5a]/60 bg-[#010401] px-4 py-3 text-sm text-[#75ff5a] outline-none transition focus:border-[#75ff5a]"
+                    value={customJobRole}
+                    onChange={(event) => setCustomJobRole(event.target.value)}
+                    placeholder="예: iOS 개발자, 데이터 분석가, DevRel, 게임 클라이언트"
+                  />
+                </label>
+              )}
+
               <label className="block space-y-2">
                 <span className="text-sm font-medium uppercase tracking-[0.14em] text-[#75ff5a]">
                   톤
@@ -462,7 +493,8 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="border border-[#75ff5a] bg-[#75ff5a]/10 px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[#75ff5a] transition hover:bg-[#75ff5a]/16"
+                disabled={jobRole === "custom" && !customJobRole.trim()}
+                className="border border-[#75ff5a] bg-[#75ff5a]/10 px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[#75ff5a] transition hover:bg-[#75ff5a]/16 disabled:cursor-not-allowed disabled:border-[#75ff5a]/20 disabled:text-[#75ff5a]/25"
               >
                 &gt; continue
               </button>
@@ -507,10 +539,13 @@ export default function Home() {
               </p>
               <div className="mt-4">
                 <p className="text-sm font-semibold text-[#75ff5a]">
-                  {jobOptions.find((option) => option.value === jobRole)?.label}
+                  {resolvedJobRole || "직무별 예시"}
                 </p>
                 <div className="mt-3 space-y-2">
-                  {roleExamples[jobRole].map((example) => (
+                  {(jobRole === "custom"
+                    ? customRoleExamples
+                    : roleExamples[jobRole]
+                  ).map((example) => (
                     <button
                       key={example}
                       type="button"

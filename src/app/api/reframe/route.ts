@@ -6,10 +6,10 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 
 type CareerLevel = "entry" | "experienced";
-type JobRole = "frontend" | "backend" | "designer" | "pm" | "ai";
+type BuiltInJobRole = "frontend" | "backend" | "designer" | "pm" | "ai";
 type Tone = "meme" | "linkedin" | "resume";
 
-const roleMap: Record<JobRole, string> = {
+const roleMap: Record<BuiltInJobRole, string> = {
   frontend: "프런트엔드",
   backend: "백엔드",
   designer: "디자이너",
@@ -80,7 +80,11 @@ const schema = {
   },
 } as const;
 
-function rolePrompt(role: JobRole) {
+function isBuiltInJobRole(role: string): role is BuiltInJobRole {
+  return ["frontend", "backend", "designer", "pm", "ai"].includes(role);
+}
+
+function rolePrompt(role: string) {
   if (role === "frontend") {
     return `
 직무: 프런트엔드
@@ -113,10 +117,18 @@ function rolePrompt(role: JobRole) {
 `.trim();
   }
 
-  return `
+  if (role === "ai") {
+    return `
 직무: AI
 - 포지셔닝 키워드: LLM Integration, Prompt Engineering, Model Optimization
 - 강조 역량: 실험 설계, 데이터 분석, 모델 응용, 서비스 통합
+`.trim();
+  }
+
+  return `
+직무: ${role}
+- 포지셔닝 방향: 사용자가 직접 입력한 직무명에 맞는 핵심 역할, 협업 방식, 문제 해결 역량을 도출
+- 강조 역량: 직무명에서 연상되는 실무 능력, 도메인 이해, 실행력, transferable skills
 `.trim();
 }
 
@@ -290,11 +302,15 @@ async function readTonePrompt(tone: Tone): Promise<string> {
 
 function buildInput(payload: {
   careerLevel: CareerLevel;
-  jobRole: JobRole;
+  jobRole: string;
   tone: Tone;
   rawInput: string;
   externalContext: string;
 }) {
+  const resolvedRole = isBuiltInJobRole(payload.jobRole)
+    ? roleMap[payload.jobRole]
+    : payload.jobRole;
+
   return `
 기획 컨텍스트:
 - 서비스명: 딸깍톤 (Ddalggakton)
@@ -303,11 +319,11 @@ function buildInput(payload: {
 
 선택 정보:
 - 경력: ${careerMap[payload.careerLevel]}
-- 직무: ${roleMap[payload.jobRole]}
+- 직무: ${resolvedRole}
 - 톤: ${payload.tone}
 
 직무별 맥락:
-${rolePrompt(payload.jobRole)}
+${rolePrompt(resolvedRole)}
 
 경력별 맥락:
 ${careerPrompt(payload.careerLevel)}
@@ -696,7 +712,7 @@ export async function POST(request: Request) {
 
     const body = (await request.json()) as {
       careerLevel?: CareerLevel;
-      jobRole?: JobRole;
+      jobRole?: string;
       tone?: Tone;
       rawInput?: string;
       githubId?: string;
