@@ -1,3 +1,5 @@
+import fs from "fs/promises";
+import path from "path";
 import OpenAI from "openai";
 import { NextResponse } from "next/server";
 
@@ -273,10 +275,15 @@ function memePrompt() {
 `.trim();
 }
 
-function tonePrompt(tone: Tone) {
-  if (tone === "linkedin") return linkedinPrompt();
-  if (tone === "resume") return resumePrompt();
-  return memePrompt();
+const promptFileMap: Record<Tone, string> = {
+  linkedin: "prompt-linkedin.md",
+  resume: "prompt-resume.md",
+  meme: "prompt-meme.md",
+};
+
+async function readTonePrompt(tone: Tone): Promise<string> {
+  const filePath = path.join(process.cwd(), "prompts", promptFileMap[tone]);
+  return fs.readFile(filePath, "utf-8");
 }
 
 function buildInput(payload: {
@@ -565,9 +572,11 @@ export async function POST(request: Request) {
       blogUrl: body.blogUrl,
     });
 
+    const tonePromptContent = await readTonePrompt(body.tone);
+
     const response = await client.responses.create({
       model: process.env.OPENAI_MODEL ?? "gpt-5-mini",
-      instructions: [basePrompt(), tonePrompt(body.tone)].join("\n\n"),
+      instructions: [basePrompt(), tonePromptContent].join("\n\n"),
       input: buildInput({
         careerLevel: body.careerLevel,
         jobRole: body.jobRole,
