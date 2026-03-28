@@ -151,6 +151,8 @@ function basePrompt() {
 - 장난스러운 결과는 밈톤에서만 허용하고, 링크드인톤과 이력서톤은 실제 제출 가능한 수준으로 쓸 것
 - 수치가 필요할 때는 보수적 추정치만 사용하고, 허위 KPI나 매출, 조직 규모는 금지
 - 복사 전용 결과인 markdown과 plainText는 tone에 맞는 최종본으로 작성할 것
+- 외부 공개 정보가 제공되면, 그 내용을 먼저 요약/재해석한 뒤 사용자 입력과 충돌하지 않는 범위에서 결과에 실제로 반영할 것
+- 외부 공개 정보는 단순 참고가 아니라 증거 기반 보강 정보로 취급할 것
 
 출력 규칙:
 - 반드시 JSON만 반환할 것
@@ -337,6 +339,115 @@ function stripHtmlTags(html: string) {
     .trim();
 }
 
+function stripMarkdown(text: string) {
+  return text
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, " ")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/^#+\s+/gm, "")
+    .replace(/^[-*]\s+/gm, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function pickTopTechPackages(packageJsonText: string) {
+  try {
+    const parsed = JSON.parse(packageJsonText) as {
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+
+    const names = [
+      ...Object.keys(parsed.dependencies ?? {}),
+      ...Object.keys(parsed.devDependencies ?? {}),
+    ];
+
+    const preferred = names.filter((name) =>
+      [
+        "react",
+        "next",
+        "typescript",
+        "tailwindcss",
+        "vue",
+        "nuxt",
+        "svelte",
+        "node",
+        "express",
+        "nestjs",
+        "spring",
+        "django",
+        "fastapi",
+        "openai",
+        "langchain",
+        "pandas",
+        "numpy",
+      ].some((keyword) => name.toLowerCase().includes(keyword)),
+    );
+
+    return Array.from(new Set(preferred)).slice(0, 6);
+  } catch {
+    return [];
+  }
+}
+
+async function fetchRepoFile(
+  owner: string,
+  repo: string,
+  path: string,
+  headers: HeadersInit,
+) {
+  const response = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
+    {
+      headers,
+      cache: "no-store",
+      signal: AbortSignal.timeout(5000),
+    },
+  );
+
+  if (!response.ok) return "";
+
+  const data = (await response.json()) as { content?: string; encoding?: string };
+  if (!data.content) return "";
+  if (data.encoding === "base64") {
+    return Buffer.from(data.content, "base64").toString("utf8");
+  }
+
+  return data.content;
+}
+
+async function summarizeRepo(
+  owner: string,
+  repo: {
+    name?: string;
+    language?: string;
+    description?: string;
+    fork?: boolean;
+  },
+  headers: HeadersInit,
+) {
+  if (!repo.name || repo.fork) return "";
+
+  const [readmeText, packageJsonText] = await Promise.all([
+    fetchRepoFile(owner, repo.name, "README.md", headers),
+    fetchRepoFile(owner, repo.name, "package.json", headers),
+  ]);
+
+  const packageHints = pickTopTechPackages(packageJsonText);
+  const readmeSummary = stripMarkdown(readmeText).slice(0, 280);
+
+  return [
+    `프로젝트명: ${repo.name}`,
+    repo.description ? `설명: ${repo.description}` : "",
+    repo.language ? `대표 언어: ${repo.language}` : "",
+    packageHints.length > 0 ? `패키지 기반 기술 추정: ${packageHints.join(", ")}` : "",
+    readmeSummary ? `README 요약: ${readmeSummary}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
 async function fetchGithubContext(githubId: string) {
   const notes: string[] = [];
   if (!githubId) {
@@ -387,8 +498,20 @@ async function fetchGithubContext(githubId: string) {
           language?: string;
           stargazers_count?: number;
           description?: string;
+          fork?: boolean;
         }>)
       : [];
+
+    const topLanguages = Array.from(
+      repos.reduce((map, repo) => {
+        if (!repo.language) return map;
+        map.set(repo.language, (map.get(repo.language) ?? 0) + 1);
+        return map;
+      }, new Map<string, number>()),
+    )
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4)
+      .map(([language]) => language);
 
     const repoSummary = repos
       .slice(0, 3)
@@ -399,14 +522,29 @@ async function fetchGithubContext(githubId: string) {
       .filter(Boolean)
       .join(", ");
 
+    const repoDetails = (
+      await Promise.all(
+        repos
+          .filter((repo) => !repo.fork)
+          .slice(0, 2)
+          .map((repo) => summarizeRepo(user.login ?? githubId, repo, headers)),
+      )
+    ).filter(Boolean);
+
     return {
       summary: [
+        "[GitHub 공개 정보 요약]",
         `GitHub ID: ${user.login ?? githubId}`,
         user.name ? `이름: ${user.name}` : "",
         user.bio ? `Bio: ${user.bio}` : "",
         typeof user.public_repos === "number" ? `공개 저장소 수: ${user.public_repos}` : "",
         typeof user.followers === "number" ? `팔로워 수: ${user.followers}` : "",
+        topLanguages.length > 0 ? `주요 언어 추정: ${topLanguages.join(", ")}` : "",
         repoSummary ? `최근 공개 저장소: ${repoSummary}` : "",
+        repoDetails.length > 0 ? `대표 공개 프로젝트 분석:\n${repoDetails.join("\n\n")}` : "",
+        topLanguages.length > 0
+          ? `강한 반영 지시: headline/about/experience/skills 중 최소 2곳 이상에 ${topLanguages.join(", ")} 및 대표 프로젝트 맥락을 실제로 반영`
+          : "",
       ]
         .filter(Boolean)
         .join("\n"),
@@ -449,10 +587,12 @@ async function fetchBlogContext(blogUrl: string) {
 
     return {
       summary: [
+        "[블로그 공개 정보 요약]",
         `블로그 URL: ${trimmed}`,
         title ? `페이지 제목: ${title}` : "",
         description ? `설명: ${description}` : "",
         excerpt ? `본문 요약: ${excerpt}` : "",
+        excerpt ? "반영 힌트: 관심사나 글감에서 드러나는 키워드를 소개/스킬/경험에 자연스럽게 녹일 것" : "",
       ]
         .filter(Boolean)
         .join("\n"),
