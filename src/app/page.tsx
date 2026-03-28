@@ -187,10 +187,8 @@ function getResultHeading(result: ResultPayload, tone: Tone) {
 export default function Home() {
   const [careerLevel, setCareerLevel] = useState<CareerLevel>("entry");
   const [jobRole, setJobRole] = useState<JobRole>("frontend");
-  const [tone, setTone] = useState<Tone>("linkedin");
-  const [rawInput, setRawInput] = useState(
-    "리액트로 토이프로젝트 만들어봄\nCSS 하루종일 붙잡고 버튼 가운데 정렬함\n유튜브로 Next.js 강의 들음",
-  );
+  const [tone, setTone] = useState<Tone>("meme");
+  const [rawInput, setRawInput] = useState("");
   const [githubId, setGithubId] = useState("");
   const [blogUrl, setBlogUrl] = useState("");
   const [step, setStep] = useState(1);
@@ -499,9 +497,7 @@ export default function Home() {
                 className="min-h-56 w-full border border-[#75ff5a]/60 bg-[#010401] px-4 py-4 text-sm leading-7 text-[#75ff5a] outline-none transition focus:border-[#75ff5a]"
                 value={rawInput}
                 onChange={(event) => setRawInput(event.target.value)}
-                placeholder={
-                  "예:\nSNS 프로젝트를 진행해보았어요.\n인턴을 해보았어요."
-                }
+                placeholder=""
               />
             </label>
 
