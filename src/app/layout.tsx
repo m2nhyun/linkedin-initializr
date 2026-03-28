@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans_KR, Space_Grotesk } from "next/font/google";
+import { IBM_Plex_Sans_KR, Space_Mono } from "next/font/google";
 import "./globals.css";
 
 const bodyFont = IBM_Plex_Sans_KR({
@@ -8,10 +8,10 @@ const bodyFont = IBM_Plex_Sans_KR({
   weight: ["400", "500", "600", "700"],
 });
 
-const displayFont = Space_Grotesk({
+const displayFont = Space_Mono({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["500", "700"],
+  weight: ["400", "700"],
 });
 
 export const metadata: Metadata = {

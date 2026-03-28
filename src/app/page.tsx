@@ -312,35 +312,46 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.72),_transparent_35%),linear-gradient(180deg,_#f8f2e5_0%,_#efe3cf_50%,_#e4d6bc_100%)] px-4 py-6 text-stone-900 sm:px-6 sm:py-10">
+    <main className="min-h-screen bg-[#020402] px-3 py-4 text-[#75ff5a] sm:px-6 sm:py-8">
       <div className="mx-auto flex w-full max-w-xl flex-col gap-4 sm:max-w-[640px]">
-        <section className="rounded-[28px] border border-stone-900/10 bg-white/82 p-5 shadow-[0_20px_60px_rgba(77,56,23,0.14)] backdrop-blur sm:p-6">
+        <section className="border border-[#75ff5a]/80 bg-[#040a04] p-4 shadow-[0_0_0_1px_rgba(117,255,90,0.2)] sm:p-5">
           <div className="flex items-center justify-between gap-3">
-            <span className="rounded-full bg-stone-900 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-50">
-              딸깍톤
+            <span className="border border-[#75ff5a]/80 bg-[#75ff5a]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#75ff5a]">
+              ./TERMINAL/ROOT_
             </span>
-            <span className="text-xs text-stone-500">OpenAI Responses API</span>
+            <span className="border border-[#75ff5a]/60 px-2 py-1 text-[11px] uppercase text-[#75ff5a]/70">
+              Execute
+            </span>
           </div>
 
-          <h1 className="mt-4 text-3xl font-semibold tracking-[-0.05em] sm:text-4xl">
-            평범한 경험을 톤에 맞게 다시 써주는 포지셔닝 엔진.
+          <div className="mt-4 flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.18em] text-[#75ff5a]/55">
+            <span>[home]</span>
+            <span>[logs]</span>
+            <span>[files]</span>
+            <span>[network]</span>
+          </div>
+
+          <h1 className="mt-4 text-[2rem] font-bold leading-none tracking-[-0.06em] text-[#75ff5a] sm:text-[2.4rem]">
+            Load &quot;Professional_Identity&quot; Into Linkedin_v2.sys
           </h1>
-          <p className="mt-3 text-sm leading-7 text-stone-600">
-            지금은 OpenAI를 <span className="font-semibold text-stone-900">결과 생성 단계</span>에 사용합니다.
-            사용자가 고른 경력, 직무, 톤과 자유형식 경험을 바탕으로 우리가 설계한 프롬프트를 보내고,
-            구조화된 결과를 받습니다.
+          <p className="mt-3 text-sm leading-7 text-[#d4d4d4]">
+            &gt; 자유형식 데이터를 입력하십시오.
+            <br />
+            &gt; 인터리전트 엔진이 귀하의 경험을 분석 중입니다.
+            <br />
+            &gt; 최적화된 결과물을 생성하십시오.
           </p>
 
           <div className="mt-5">
-            <div className="flex items-center justify-between text-xs font-medium text-stone-500">
+            <div className="flex items-center justify-between text-xs font-medium uppercase tracking-[0.16em] text-[#75ff5a]/62">
               <span>
                 Step {currentStep} / 4
               </span>
               <span>{funnelSteps[currentStep - 1].label}</span>
             </div>
-            <div className="mt-2 h-2 rounded-full bg-stone-200">
+            <div className="mt-2 h-2 border border-[#75ff5a]/40 bg-[#021302]">
               <div
-                className="h-2 rounded-full bg-stone-900 transition-all duration-500"
+                className="h-full bg-[#75ff5a] transition-all duration-500"
                 style={{ width: `${progressValue}%` }}
               />
             </div>
@@ -352,7 +363,7 @@ export default function Home() {
                 key={preset.label}
                 type="button"
                 onClick={() => applyPreset(preset)}
-                className="rounded-full border border-stone-300 bg-white px-3 py-2 text-xs font-medium text-stone-700 transition hover:border-stone-500"
+                className="border border-[#75ff5a]/50 bg-transparent px-3 py-2 text-[11px] font-medium uppercase tracking-[0.14em] text-[#75ff5a] transition hover:bg-[#75ff5a]/8"
               >
                 {preset.label}
               </button>
@@ -361,10 +372,10 @@ export default function Home() {
         </section>
 
         {step === 1 && (
-          <section className="rounded-[28px] border border-stone-900/10 bg-white/78 p-5 shadow-[0_16px_50px_rgba(77,56,23,0.12)] sm:p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">Funnel 1</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">경력, 직무, 톤을 먼저 선택합니다.</h2>
-            <p className="mt-2 text-sm leading-7 text-stone-600">
+          <section className="border border-[#75ff5a]/80 bg-[#040a04] p-4 sm:p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#75ff5a]/55">[system_prompt] step 01</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[#75ff5a]">경력, 직무, 톤을 먼저 선택합니다.</h2>
+            <p className="mt-2 text-sm leading-7 text-[#d4d4d4]">
               기획 기준:
               <br />
               <span className="block">경력: 신입 / 경력</span>
@@ -374,9 +385,9 @@ export default function Home() {
 
             <div className="mt-5 space-y-4">
               <label className="block space-y-2">
-                <span className="text-sm font-medium text-stone-700">경력</span>
+                <span className="text-sm font-medium uppercase tracking-[0.14em] text-[#75ff5a]">경력</span>
                 <select
-                  className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-stone-500"
+                  className="w-full border border-[#75ff5a]/60 bg-[#010401] px-4 py-3 text-sm text-[#75ff5a] outline-none transition focus:border-[#75ff5a]"
                   value={careerLevel}
                   onChange={(event) => setCareerLevel(event.target.value as CareerLevel)}
                 >
@@ -389,9 +400,9 @@ export default function Home() {
               </label>
 
               <label className="block space-y-2">
-                <span className="text-sm font-medium text-stone-700">직무</span>
+                <span className="text-sm font-medium uppercase tracking-[0.14em] text-[#75ff5a]">직무</span>
                 <select
-                  className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-stone-500"
+                  className="w-full border border-[#75ff5a]/60 bg-[#010401] px-4 py-3 text-sm text-[#75ff5a] outline-none transition focus:border-[#75ff5a]"
                   value={jobRole}
                   onChange={(event) => setJobRole(event.target.value as JobRole)}
                 >
@@ -404,9 +415,9 @@ export default function Home() {
               </label>
 
               <label className="block space-y-2">
-                <span className="text-sm font-medium text-stone-700">톤</span>
+                <span className="text-sm font-medium uppercase tracking-[0.14em] text-[#75ff5a]">톤</span>
                 <select
-                  className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-stone-500"
+                  className="w-full border border-[#75ff5a]/60 bg-[#010401] px-4 py-3 text-sm text-[#75ff5a] outline-none transition focus:border-[#75ff5a]"
                   value={tone}
                   onChange={(event) => setTone(event.target.value as Tone)}
                 >
@@ -423,44 +434,44 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="rounded-full bg-stone-900 px-5 py-3 text-sm font-semibold text-stone-50 transition hover:bg-stone-800"
+                className="border border-[#75ff5a] bg-[#75ff5a]/10 px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[#75ff5a] transition hover:bg-[#75ff5a]/16"
               >
-                다음으로
+                &gt; continue
               </button>
             </div>
           </section>
         )}
 
         {step === 2 && (
-          <section className="rounded-[28px] border border-stone-900/10 bg-white/78 p-5 shadow-[0_16px_50px_rgba(77,56,23,0.12)] sm:p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">Funnel 2</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">자유형식 경험을 입력합니다.</h2>
-            <p className="mt-2 text-sm leading-7 text-stone-600">
+          <section className="border border-[#75ff5a]/80 bg-[#040a04] p-4 sm:p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#75ff5a]/55">[input_module] step 02</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[#75ff5a]">자유형식 경험을 입력합니다.</h2>
+            <p className="mt-2 text-sm leading-7 text-[#d4d4d4]">
               도움말:
               <br />
               <span className="block">ex) SNS 프로젝트를 진행해보았어요.</span>
               <span className="block">ex) 인턴을 해보았어요.</span>
-              <span className="mt-2 block text-stone-500">
+              <span className="mt-2 block text-[#75ff5a]/62">
                 짧은 메모, 실패 경험, 중단한 프로젝트도 입력 가능합니다. 딸깍톤이 역할·과정·역량 관점으로 재정리합니다.
               </span>
             </p>
 
             <label className="mt-5 block space-y-2">
-              <span className="text-sm font-medium text-stone-700">자유형식 경험</span>
+              <span className="text-sm font-medium uppercase tracking-[0.14em] text-[#75ff5a]">자유형식 경험</span>
               <textarea
-                className="min-h-56 w-full rounded-[24px] border border-stone-200 bg-[#fffdf8] px-4 py-4 text-sm leading-7 outline-none transition focus:border-stone-500"
+                className="min-h-56 w-full border border-[#75ff5a]/60 bg-[#010401] px-4 py-4 text-sm leading-7 text-[#75ff5a] outline-none transition focus:border-[#75ff5a]"
                 value={rawInput}
                 onChange={(event) => setRawInput(event.target.value)}
                 placeholder={"예:\nSNS 프로젝트를 진행해보았어요.\n인턴을 해보았어요."}
               />
             </label>
 
-            <div className="mt-5 rounded-[24px] border border-stone-200 bg-stone-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
+            <div className="mt-5 border border-[#75ff5a]/50 bg-[#010401] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">
                 직무별 자유형식 경험 입력 예시
               </p>
               <div className="mt-4">
-                <p className="text-sm font-semibold text-stone-900">
+                <p className="text-sm font-semibold text-[#75ff5a]">
                   {jobOptions.find((option) => option.value === jobRole)?.label}
                 </p>
                 <div className="mt-3 space-y-2">
@@ -471,7 +482,7 @@ export default function Home() {
                       onClick={() => {
                         setRawInput((prev) => (prev.trim() ? `${prev}\n${example}` : example));
                       }}
-                      className="block w-full rounded-2xl bg-white px-4 py-3 text-left text-sm text-stone-700 transition hover:bg-stone-100"
+                      className="block w-full border border-[#75ff5a]/35 bg-transparent px-4 py-3 text-left text-sm text-[#75ff5a] transition hover:bg-[#75ff5a]/8"
                     >
                       {example}
                     </button>
@@ -480,7 +491,7 @@ export default function Home() {
               </div>
 
               <div className="mt-5">
-                <p className="text-sm font-semibold text-stone-900">공통 예시</p>
+                <p className="text-sm font-semibold text-[#75ff5a]">공통 예시</p>
                 <div className="mt-3 grid gap-2">
                   {commonExamples.map((example) => (
                     <button
@@ -489,7 +500,7 @@ export default function Home() {
                       onClick={() => {
                         setRawInput((prev) => (prev.trim() ? `${prev}\n${example}` : example));
                       }}
-                      className="rounded-2xl bg-white px-4 py-3 text-left text-sm text-stone-700 transition hover:bg-stone-100"
+                      className="border border-[#75ff5a]/35 bg-transparent px-4 py-3 text-left text-sm text-[#75ff5a] transition hover:bg-[#75ff5a]/8"
                     >
                       {example}
                     </button>
@@ -499,7 +510,7 @@ export default function Home() {
             </div>
 
             {errorMessage && (
-              <div className="mt-5 rounded-2xl border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-900">
+              <div className="mt-5 border border-red-500/60 bg-red-950/30 px-4 py-3 text-sm text-red-300">
                 {errorMessage}
               </div>
             )}
@@ -508,26 +519,26 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="rounded-full border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-700 transition hover:border-stone-500"
+                className="border border-[#75ff5a]/45 px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[#75ff5a]/86 transition hover:bg-[#75ff5a]/8"
               >
-                이전
+                &lt; back
               </button>
               <button
                 type="button"
                 disabled={parsedLines.length === 0}
                 onClick={startGeneration}
-                className="rounded-full bg-stone-900 px-5 py-3 text-sm font-semibold text-stone-50 transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:bg-stone-300"
+                className="border border-[#75ff5a] bg-[#75ff5a]/10 px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[#75ff5a] transition hover:bg-[#75ff5a]/16 disabled:cursor-not-allowed disabled:border-[#75ff5a]/20 disabled:text-[#75ff5a]/25"
               >
-                결과 생성하기
+                &gt; start_session_now [enter]
               </button>
             </div>
           </section>
         )}
 
         {isGenerating && (
-          <section className="rounded-[28px] border border-stone-900/10 bg-[#111111] p-5 text-stone-50 shadow-[0_20px_60px_rgba(17,17,17,0.22)] sm:p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-400">Generating</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">
+          <section className="border border-[#75ff5a]/80 bg-[#040a04] p-4 text-[#75ff5a] sm:p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#75ff5a]/55">[terminal_window] ai processing</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[#75ff5a]">
               {loadingStages[Math.min(progressIndex, loadingStages.length - 1)]}
             </h2>
 
@@ -537,10 +548,10 @@ export default function Home() {
                 return (
                   <div
                     key={stage}
-                    className={`rounded-2xl border px-4 py-3 text-sm transition ${
+                    className={`border px-4 py-3 text-sm transition ${
                       active
-                        ? "border-emerald-400/40 bg-emerald-400/10 text-stone-50"
-                        : "border-white/10 bg-white/5 text-stone-400"
+                        ? "border-[#75ff5a]/80 bg-[#75ff5a]/10 text-[#75ff5a]"
+                        : "border-[#75ff5a]/20 bg-transparent text-[#75ff5a]/45"
                     }`}
                   >
                     {active ? "완료" : "대기"} · {stage}
@@ -549,12 +560,12 @@ export default function Home() {
               })}
             </div>
 
-            <div className="mt-6 rounded-[24px] border border-white/10 bg-white/5 px-4 py-5">
+            <div className="mt-6 border border-[#75ff5a]/40 bg-[#010401] px-4 py-5">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 animate-spin rounded-full border-4 border-stone-600 border-t-stone-100" />
+                <div className="h-10 w-10 animate-spin border-4 border-[#75ff5a]/25 border-t-[#75ff5a]" />
                 <div>
-                  <p className="text-sm font-semibold text-stone-100">최종 마감 중</p>
-                  <p className="mt-1 text-sm leading-6 text-stone-300">{spinnerLines[spinnerIndex]}</p>
+                  <p className="text-sm font-semibold uppercase text-[#75ff5a]">최종 마감 중</p>
+                  <p className="mt-1 text-sm leading-6 text-[#d4d4d4]">{spinnerLines[spinnerIndex]}</p>
                 </div>
               </div>
             </div>
@@ -563,10 +574,10 @@ export default function Home() {
 
         {step === 4 && !isGenerating && revealedResult && (
           <>
-            <section className="rounded-[28px] border border-stone-900/10 bg-[#111111] p-5 text-stone-50 shadow-[0_20px_60px_rgba(17,17,17,0.22)] sm:p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-400">Result</p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">{resultHeading?.title}</h2>
-              <p className="mt-2 text-sm leading-6 text-stone-300">{resultHeading?.subtitle}</p>
+            <section className="border border-[#75ff5a]/80 bg-[#040a04] p-4 text-[#75ff5a] sm:p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#75ff5a]/55">[terminal_window] output</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[#75ff5a]">{resultHeading?.title}</h2>
+              <p className="mt-2 text-sm leading-6 text-[#d4d4d4]">{resultHeading?.subtitle}</p>
 
               <div className="mt-5 flex flex-wrap gap-2">
                 {(["render", "markdown", "text"] as ResultView[]).map((view) => (
@@ -574,10 +585,10 @@ export default function Home() {
                     key={view}
                     type="button"
                     onClick={() => setActiveResultView(view)}
-                    className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                    className={`border px-4 py-2 text-sm font-medium uppercase tracking-[0.12em] transition ${
                       activeResultView === view
-                        ? "bg-stone-50 text-stone-900"
-                        : "bg-white/5 text-stone-300 hover:bg-white/10"
+                        ? "border-[#75ff5a] bg-[#75ff5a] text-[#020402]"
+                        : "border-[#75ff5a]/35 bg-transparent text-[#75ff5a]/75 hover:bg-[#75ff5a]/8"
                     }`}
                   >
                     {view === "render" ? "기본 렌더" : view === "markdown" ? "Markdown" : "일반 텍스트"}
@@ -589,14 +600,14 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => copyToClipboard("markdown")}
-                  className="rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-stone-100 transition hover:bg-white/8"
+                  className="border border-[#75ff5a]/45 px-4 py-2 text-sm font-semibold uppercase tracking-[0.12em] text-[#75ff5a] transition hover:bg-[#75ff5a]/8"
                 >
                   {copyState === "markdown" ? "Markdown 복사됨" : "Markdown 복사"}
                 </button>
                 <button
                   type="button"
                   onClick={() => copyToClipboard("text")}
-                  className="rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-stone-100 transition hover:bg-white/8"
+                  className="border border-[#75ff5a]/45 px-4 py-2 text-sm font-semibold uppercase tracking-[0.12em] text-[#75ff5a] transition hover:bg-[#75ff5a]/8"
                 >
                   {copyState === "text" ? "텍스트 복사됨" : "일반 텍스트 복사"}
                 </button>

@@ -1,186 +1,103 @@
-# 🚀 LinkedIn Initializr
+# 딸깍톤 | linkedin-initializr
 
-> **평범한 나를, 거창하게.** 이직/취준생의 경험을 AI가 전문적으로 재포장해주는 서비스
+이직·취준 사용자가 입력한 평범한 경험을 AI가 `밈톤`, `링크드인톤`, `이력서톤`으로 재포장해주는 Next.js 웹앱입니다.
 
-[![Claude API](https://img.shields.io/badge/Powered%20by-Claude%20API-blueviolet)](https://www.anthropic.com)
-[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-[![Made with ❤️](https://img.shields.io/badge/Made%20with-%E2%9D%A4%EF%B8%8F-red)](https://github.com/m2nhyun/linkedin-initializr)
+## 현재 구조
 
----
+- Frontend: Next.js 16, React 19, Tailwind CSS 4
+- AI: OpenAI Responses API
+- 배포: Vercel
+- 입력 방식:
+  - Funnel 1: 경력 / 직무 / 톤
+  - Funnel 2: 자유형식 경험
+- 출력 방식:
+  - 기본 렌더
+  - Markdown 복사
+  - 일반 텍스트 복사
 
-## 💡 프로젝트 소개
+## 톤 정의
 
-**LinkedIn Initializr**는 이직·취업 준비 과정에서 자신의 경험을 과소평가하는 사람들을 위해 만들어진 AI 서비스입니다.
+- `링크드인톤`
+  - 한국어 기반 + 직무 용어 영어 혼재
+  - Headline / About / Experience / Skills 구조
+  - 실제 LinkedIn에 붙여넣을 수 있는 수준 지향
+- `이력서톤`
+  - 완전한 한국어 격식체
+  - 직무명 / 주요 업무 / 성과 요약 / 자기소개서 활용 단락 구조
+- `밈톤`
+  - 입력의 하찮음과 포장의 과장 사이 간극을 웃음 포인트로 사용
+  - 현실의 나 / 포장된 나 대비 포함
 
-평범하게 표현된 나의 경험을 입력하면, Claude AI가 이를 **전문적이고 임팩트 있는 LinkedIn 스타일 표현**으로 즉시 변환해줍니다.
+프롬프트 기준 문서는 아래 파일을 참고합니다.
 
-### 변환 예시
+- [`prompts/prompt-linkedin.md`](./prompts/prompt-linkedin.md)
+- [`prompts/prompt-resume.md`](./prompts/prompt-resume.md)
+- [`prompts/prompt-meme.md`](./prompts/prompt-meme.md)
 
-| 내가 쓴 표현 | LinkedIn Initializr의 변환 |
-|---|---|
-| 백수 | Home Life Strategist (홈프로텍터) |
-| 알바생 | 멀티태스킹 서비스 어소시에이트 |
-| 게임만 함 | 인터랙티브 미디어 연구원 |
-| 유튜브 시청 | 디지털 콘텐츠 큐레이터 |
-| 집에서 요리 | 홈 가스트로노미 디렉터 |
-| 카페 알바 1년 | 1년간 고객 만족 최우선의 F&B 오퍼레이션 실무 담당 |
+## 시작하기
 
----
-
-## ✨ 주요 기능
-
-### 1. 경험 변환기
-자신의 현재 상태나 경험을 자유롭게 입력하면 AI가 전문적인 직함과 표현으로 변환합니다.
-- **격식체** — 공식 이력서용
-- **유머체** — 가볍게 자기소개할 때
-- **링크드인체** — LinkedIn 프로필 최적화용
-
-### 2. 이력서 한 줄 부스터
-이력서의 평범한 서술문을 임팩트 있는 표현으로 업그레이드합니다.
-
-### 3. 자기소개 생성기
-변환된 표현을 기반으로 자기소개 문장을 자동 생성합니다.
-
----
-
-## 🛠 기술 스택
-
-| 영역 | 기술 |
-|---|---|
-| Frontend | React / Vue.js |
-| Backend | FastAPI / Spring Boot |
-| AI/LLM | Claude API (Anthropic) |
-| 배포 | Vercel / Railway |
-
----
-
-## 🚀 시작하기
-
-### 사전 요구사항
+사전 요구사항:
 
 - Node.js 18+
-- Anthropic API Key ([발급받기](https://console.anthropic.com))
+- OpenAI API Key
 
-### 설치 및 실행
+설치 및 실행:
 
 ```bash
-# 레포지토리 클론
 git clone https://github.com/m2nhyun/linkedin-initializr.git
 cd linkedin-initializr
-
-# 의존성 설치
 npm install
-
-# 환경 변수 설정
-cp .env.example .env
-# .env 파일에 ANTHROPIC_API_KEY 입력
-
-# 개발 서버 실행
-npm run dev
 ```
 
-### 환경 변수
+프로젝트 루트에 `.env.local`을 만들고 아래 값을 넣습니다.
 
-```env
-ANTHROPIC_API_KEY=your_api_key_here
+```bash
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_MODEL=gpt-5-mini
 ```
 
----
-
-## 📖 사용 방법
-
-1. 웹 브라우저에서 서비스에 접속합니다.
-2. 입력창에 자신의 현재 상태나 경험을 자유롭게 입력합니다.
-   - 예: "백수", "카페 알바 1년", "유튜브만 봄"
-3. 원하는 변환 스타일(격식체 / 유머체 / 링크드인체)을 선택합니다.
-4. **변환하기** 버튼을 클릭합니다.
-5. AI가 생성한 결과물을 복사하여 이력서나 LinkedIn 프로필에 활용합니다.
-
----
-
-## 🗂 프로젝트 구조
-
-```
-linkedin-initializr/
-├── src/
-│   ├── components/       # UI 컴포넌트
-│   ├── pages/            # 페이지
-│   ├── api/              # API 클라이언트
-│   └── utils/            # 유틸리티
-├── server/
-│   ├── routes/           # API 라우트
-│   └── prompts/          # LLM 프롬프트 템플릿
-├── public/
-└── README.md
-```
-
----
-
-## 🎯 기획 배경
-
-이직·취업 준비를 하다 보면 자신의 경험을 지나치게 겸손하게 표현하는 경우가 많습니다. "백수", "알바생", "그냥 쉬는 중" 같은 표현들은 실제 경험의 가치를 제대로 담아내지 못합니다.
-
-LinkedIn Initializr는 **딸깍톤(Ddalggakton)** 해커톤 출품작으로, 유머와 실용성을 동시에 추구합니다. 클릭 한 번으로 나의 경험에 새로운 이름을 붙여주세요.
-
-> 자세한 기획 문서 → [Notion 기획서](https://www.notion.so/beberiche/3312c697cc9f80cc898ec0a510ea95e3)
-
----
-
-## 🤝 기여하기
-
-1. 이 레포지토리를 Fork합니다.
-2. 새 브랜치를 생성합니다. (`git checkout -b feature/amazing-feature`)
-3. 변경사항을 커밋합니다. (`git commit -m 'Add some amazing feature'`)
-4. 브랜치에 Push합니다. (`git push origin feature/amazing-feature`)
-5. Pull Request를 생성합니다.
-
----
-
-## 📄 라이선스
-
-이 프로젝트는 MIT 라이선스를 따릅니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참고하세요.
-
----
-
-<div align="center">
-  <strong>평범한 나를, 거창하게. 🚀</strong><br/>
-  Made with ❤️ at 딸깍톤
-</div>
-
-
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-
-## Getting Started
-
-First, run the development server:
+개발 서버 실행:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+프로덕션 빌드:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 주요 파일
 
-## Learn More
+```txt
+src/app/page.tsx
+  - funnel UI
+  - 생성 진행 상태
+  - 결과 렌더 / 복사 UX
 
-To learn more about Next.js, take a look at the following resources:
+src/app/api/reframe/route.ts
+  - OpenAI Responses API 호출
+  - tone별 프롬프트 조합
+  - JSON schema 응답 강제
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+prompts/*.md
+  - 톤별 기획 문서와 프롬프트 기준
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 주의 사항
 
-## Deploy on Vercel
+- `OPENAI_API_KEY`는 서버에서만 사용합니다.
+- `NEXT_PUBLIC_` 접두사를 붙이면 안 됩니다.
+- `.env.local`만 로컬에 두고 git에는 올리지 않습니다.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 배포
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Vercel 프로젝트 환경 변수에 아래 값을 등록합니다.
+
+```bash
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_MODEL=gpt-5-mini
+```
+
+배포 후 `/api/reframe`가 정상 응답하면 프로덕션도 정상 동작합니다.
