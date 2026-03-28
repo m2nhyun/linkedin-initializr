@@ -38,10 +38,10 @@ type ResultPayload = {
 };
 
 const funnelSteps = [
-  { id: 1, label: "기본 정보" },
-  { id: 2, label: "자유 경험" },
-  { id: 3, label: "생성 중" },
-  { id: 4, label: "결과" },
+  { id: 1, label: "경력 · 직무 · 톤" },
+  { id: 2, label: "자유형식 경험" },
+  { id: 3, label: "AI 재포장 중" },
+  { id: 4, label: "결과 확인" },
 ] as const;
 
 const careerOptions: Array<{ value: CareerLevel; label: string }> = [
@@ -363,7 +363,14 @@ export default function Home() {
         {step === 1 && (
           <section className="rounded-[28px] border border-stone-900/10 bg-white/78 p-5 shadow-[0_16px_50px_rgba(77,56,23,0.12)] sm:p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">Funnel 1</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">경력, 직무, 톤을 먼저 고릅니다.</h2>
+            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">경력, 직무, 톤을 먼저 선택합니다.</h2>
+            <p className="mt-2 text-sm leading-7 text-stone-600">
+              기획 기준:
+              <br />
+              <span className="block">경력: 신입 / 경력</span>
+              <span className="block">직무: 프런트엔드, 백엔드, 디자이너, PM, AI</span>
+              <span className="block">톤: 밈톤, 링크드인톤, 이력서톤</span>
+            </p>
 
             <div className="mt-5 space-y-4">
               <label className="block space-y-2">
@@ -433,6 +440,9 @@ export default function Home() {
               <br />
               <span className="block">ex) SNS 프로젝트를 진행해보았어요.</span>
               <span className="block">ex) 인턴을 해보았어요.</span>
+              <span className="mt-2 block text-stone-500">
+                짧은 메모, 실패 경험, 중단한 프로젝트도 입력 가능합니다. 딸깍톤이 역할·과정·역량 관점으로 재정리합니다.
+              </span>
             </p>
 
             <label className="mt-5 block space-y-2">
