@@ -350,10 +350,6 @@ export default function Home() {
             <span>[files]</span>
             <span>[network]</span>
           </div>
-
-          <h1 className="mt-4 text-[2rem] font-bold leading-none tracking-[-0.06em] text-[#75ff5a] sm:text-[2.4rem]">
-            Load &quot;Professional_Identity&quot;
-          </h1>
           <p className="mt-3 text-sm leading-7 text-[#d4d4d4]">
             &gt; 자유형식 데이터를 입력하십시오.
             <br />
@@ -586,7 +582,9 @@ export default function Home() {
 
         {step === 3 && !isGenerating && (
           <section className="border border-[#75ff5a]/80 bg-[#040a04] p-4 sm:p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#75ff5a]/55">[source_module] step 03</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#75ff5a]/55">
+              [source_module] step 03
+            </p>
             <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[#75ff5a]">
               외부 공개 정보로 입력을 보강합니다.
             </h2>
@@ -598,7 +596,9 @@ export default function Home() {
 
             <div className="mt-5 space-y-4">
               <label className="block space-y-2">
-                <span className="text-sm font-medium uppercase tracking-[0.14em] text-[#75ff5a]">GitHub ID 또는 URL</span>
+                <span className="text-sm font-medium uppercase tracking-[0.14em] text-[#75ff5a]">
+                  GitHub ID 또는 URL
+                </span>
                 <input
                   className="w-full border border-[#75ff5a]/60 bg-[#010401] px-4 py-3 text-sm text-[#75ff5a] outline-none transition focus:border-[#75ff5a]"
                   value={githubId}
@@ -608,7 +608,9 @@ export default function Home() {
               </label>
 
               <label className="block space-y-2">
-                <span className="text-sm font-medium uppercase tracking-[0.14em] text-[#75ff5a]">개인 블로그 URL</span>
+                <span className="text-sm font-medium uppercase tracking-[0.14em] text-[#75ff5a]">
+                  개인 블로그 URL
+                </span>
                 <input
                   className="w-full border border-[#75ff5a]/60 bg-[#010401] px-4 py-3 text-sm text-[#75ff5a] outline-none transition focus:border-[#75ff5a]"
                   value={blogUrl}
@@ -619,9 +621,17 @@ export default function Home() {
             </div>
 
             <div className="mt-5 border border-[#75ff5a]/40 bg-[#010401] px-4 py-4 text-sm leading-7 text-[#d4d4d4]">
-              <p className="font-semibold uppercase tracking-[0.14em] text-[#75ff5a]">수집 방식</p>
-              <p className="mt-2">- GitHub: 공개 프로필과 최근 공개 저장소를 읽어 기술 맥락을 보강합니다.</p>
-              <p>- 블로그: 페이지 제목, 설명, 본문 일부를 읽어 관심사와 글감 맥락을 보강합니다.</p>
+              <p className="font-semibold uppercase tracking-[0.14em] text-[#75ff5a]">
+                수집 방식
+              </p>
+              <p className="mt-2">
+                - GitHub: 공개 프로필과 최근 공개 저장소를 읽어 기술 맥락을
+                보강합니다.
+              </p>
+              <p>
+                - 블로그: 페이지 제목, 설명, 본문 일부를 읽어 관심사와 글감
+                맥락을 보강합니다.
+              </p>
               <p>- 둘 다 비워도 결과 생성은 가능합니다.</p>
             </div>
 
