@@ -11,6 +11,7 @@ type ResultPayload = {
   markdown: string;
   plainText: string;
   mismatchNote: string;
+  sourceNotes?: string[];
   linkedin: {
     headline: string;
     about: string;
@@ -40,8 +41,7 @@ type ResultPayload = {
 const funnelSteps = [
   { id: 1, label: "경력 · 직무 · 톤" },
   { id: 2, label: "자유형식 경험" },
-  { id: 3, label: "AI 재포장 중" },
-  { id: 4, label: "결과 확인" },
+  { id: 3, label: "외부 정보 보강" },
 ] as const;
 
 const careerOptions: Array<{ value: CareerLevel; label: string }> = [
@@ -121,21 +121,24 @@ const presets: Array<{
     careerLevel: "entry",
     jobRole: "frontend",
     tone: "linkedin",
-    rawInput: "리액트로 토이프로젝트 만들어봄\nCSS 하루종일 붙잡고 버튼 가운데 정렬함\n유튜브로 Next.js 강의 들음",
+    rawInput:
+      "리액트로 토이프로젝트 만들어봄\nCSS 하루종일 붙잡고 버튼 가운데 정렬함\n유튜브로 Next.js 강의 들음",
   },
   {
     label: "PM 이력서",
     careerLevel: "entry",
     jobRole: "pm",
     tone: "resume",
-    rawInput: "팀 프로젝트에서 회의 진행하고 노션에 정리함\n스프린트 일정 짜봤는데 다 밀림\nA/B 테스트 기획해봄",
+    rawInput:
+      "팀 프로젝트에서 회의 진행하고 노션에 정리함\n스프린트 일정 짜봤는데 다 밀림\nA/B 테스트 기획해봄",
   },
   {
     label: "AI 밈톤",
     careerLevel: "entry",
     jobRole: "ai",
     tone: "meme",
-    rawInput: "ChatGPT API 붙여서 챗봇 만들어봄\n논문 읽다가 수식에서 포기함\n파인튜닝 시도했는데 GPU 없어서 실패",
+    rawInput:
+      "ChatGPT API 붙여서 챗봇 만들어봄\n논문 읽다가 수식에서 포기함\n파인튜닝 시도했는데 GPU 없어서 실패",
   },
 ];
 
@@ -176,7 +179,8 @@ function getResultHeading(result: ResultPayload, tone: Tone) {
 
   return {
     title: `${result.meme.koreanTitle} | ${result.meme.englishTitle}`,
-    subtitle: "밈톤은 과장과 재미를 살리되 직무 맥락은 유지하도록 구성했습니다.",
+    subtitle:
+      "밈톤은 과장과 재미를 살리되 직무 맥락은 유지하도록 구성했습니다.",
   };
 }
 
@@ -187,20 +191,29 @@ export default function Home() {
   const [rawInput, setRawInput] = useState(
     "리액트로 토이프로젝트 만들어봄\nCSS 하루종일 붙잡고 버튼 가운데 정렬함\n유튜브로 Next.js 강의 들음",
   );
+  const [githubId, setGithubId] = useState("");
+  const [blogUrl, setBlogUrl] = useState("");
   const [step, setStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [progressIndex, setProgressIndex] = useState(0);
   const [spinnerIndex, setSpinnerIndex] = useState(0);
   const [loadingFinished, setLoadingFinished] = useState(false);
-  const [pendingResult, setPendingResult] = useState<ResultPayload | null>(null);
-  const [revealedResult, setRevealedResult] = useState<ResultPayload | null>(null);
-  const [activeResultView, setActiveResultView] = useState<ResultView>("render");
-  const [copyState, setCopyState] = useState<"idle" | "markdown" | "text">("idle");
+  const [pendingResult, setPendingResult] = useState<ResultPayload | null>(
+    null,
+  );
+  const [revealedResult, setRevealedResult] = useState<ResultPayload | null>(
+    null,
+  );
+  const [activeResultView, setActiveResultView] =
+    useState<ResultView>("render");
+  const [copyState, setCopyState] = useState<"idle" | "markdown" | "text">(
+    "idle",
+  );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const parsedLines = useMemo(() => parseLines(rawInput), [rawInput]);
-  const currentStep = Math.min(step, 4);
-  const progressValue = currentStep * 25;
+  const funnelStep = Math.min(step, 3);
+  const progressValue = funnelStep === 1 ? 33 : funnelStep === 2 ? 66 : 100;
   const resultHeading = useMemo(
     () => (revealedResult ? getResultHeading(revealedResult, tone) : null),
     [revealedResult, tone],
@@ -239,7 +252,7 @@ export default function Home() {
     setCopyState("idle");
     setActiveResultView("render");
     setIsGenerating(true);
-    setStep(3);
+    setStep(4);
 
     try {
       const response = await fetch("/api/reframe", {
@@ -250,10 +263,15 @@ export default function Home() {
           jobRole,
           tone,
           rawInput,
+          githubId,
+          blogUrl,
         }),
       });
 
-      const data = (await response.json()) as { result?: ResultPayload; error?: string };
+      const data = (await response.json()) as {
+        result?: ResultPayload;
+        error?: string;
+      };
       if (!response.ok || !data.result) {
         throw new Error(data.error ?? "결과 생성에 실패했습니다.");
       }
@@ -261,7 +279,9 @@ export default function Home() {
       setPendingResult(data.result);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "알 수 없는 오류로 결과 생성에 실패했습니다.";
+        error instanceof Error
+          ? error.message
+          : "알 수 없는 오류로 결과 생성에 실패했습니다.";
       setErrorMessage(message);
       setIsGenerating(false);
       setLoadingFinished(false);
@@ -270,7 +290,8 @@ export default function Home() {
 
   async function copyToClipboard(mode: "markdown" | "text") {
     if (!revealedResult) return;
-    const content = mode === "markdown" ? revealedResult.markdown : revealedResult.plainText;
+    const content =
+      mode === "markdown" ? revealedResult.markdown : revealedResult.plainText;
     await navigator.clipboard.writeText(content);
     setCopyState(mode);
     window.setTimeout(() => setCopyState("idle"), 1800);
@@ -281,6 +302,8 @@ export default function Home() {
     setJobRole(preset.jobRole);
     setTone(preset.tone);
     setRawInput(preset.rawInput);
+    setGithubId("");
+    setBlogUrl("");
     setStep(1);
     setIsGenerating(false);
     setProgressIndex(0);
@@ -295,6 +318,8 @@ export default function Home() {
 
   function resetFlow() {
     setStep(1);
+    setGithubId("");
+    setBlogUrl("");
     setIsGenerating(false);
     setProgressIndex(0);
     setSpinnerIndex(0);
@@ -327,7 +352,7 @@ export default function Home() {
           </div>
 
           <h1 className="mt-4 text-[2rem] font-bold leading-none tracking-[-0.06em] text-[#75ff5a] sm:text-[2.4rem]">
-            Load &quot;Professional_Identity&quot; Into Linkedin_v2.sys
+            Load &quot;Professional_Identity&quot;
           </h1>
           <p className="mt-3 text-sm leading-7 text-[#d4d4d4]">
             &gt; 자유형식 데이터를 입력하십시오.
@@ -339,10 +364,8 @@ export default function Home() {
 
           <div className="mt-5">
             <div className="flex items-center justify-between text-xs font-medium uppercase tracking-[0.16em] text-[#75ff5a]/62">
-              <span>
-                Step {currentStep} / 4
-              </span>
-              <span>{funnelSteps[currentStep - 1].label}</span>
+              <span>Funnel {funnelStep} / 3</span>
+              <span>{funnelSteps[funnelStep - 1].label}</span>
             </div>
             <div className="mt-2 h-2 border border-[#75ff5a]/40 bg-[#021302]">
               <div
@@ -368,23 +391,33 @@ export default function Home() {
 
         {step === 1 && (
           <section className="border border-[#75ff5a]/80 bg-[#040a04] p-4 sm:p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#75ff5a]/55">[system_prompt] step 01</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[#75ff5a]">경력, 직무, 톤을 먼저 선택합니다.</h2>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#75ff5a]/55">
+              [system_prompt] step 01
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[#75ff5a]">
+              경력, 직무, 톤을 먼저 선택합니다.
+            </h2>
             <p className="mt-2 text-sm leading-7 text-[#d4d4d4]">
               기획 기준:
               <br />
               <span className="block">경력: 신입 / 경력</span>
-              <span className="block">직무: 프런트엔드, 백엔드, 디자이너, PM, AI</span>
+              <span className="block">
+                직무: 프런트엔드, 백엔드, 디자이너, PM, AI
+              </span>
               <span className="block">톤: 밈톤, 링크드인톤, 이력서톤</span>
             </p>
 
             <div className="mt-5 space-y-4">
               <label className="block space-y-2">
-                <span className="text-sm font-medium uppercase tracking-[0.14em] text-[#75ff5a]">경력</span>
+                <span className="text-sm font-medium uppercase tracking-[0.14em] text-[#75ff5a]">
+                  경력
+                </span>
                 <select
                   className="w-full border border-[#75ff5a]/60 bg-[#010401] px-4 py-3 text-sm text-[#75ff5a] outline-none transition focus:border-[#75ff5a]"
                   value={careerLevel}
-                  onChange={(event) => setCareerLevel(event.target.value as CareerLevel)}
+                  onChange={(event) =>
+                    setCareerLevel(event.target.value as CareerLevel)
+                  }
                 >
                   {careerOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -395,11 +428,15 @@ export default function Home() {
               </label>
 
               <label className="block space-y-2">
-                <span className="text-sm font-medium uppercase tracking-[0.14em] text-[#75ff5a]">직무</span>
+                <span className="text-sm font-medium uppercase tracking-[0.14em] text-[#75ff5a]">
+                  직무
+                </span>
                 <select
                   className="w-full border border-[#75ff5a]/60 bg-[#010401] px-4 py-3 text-sm text-[#75ff5a] outline-none transition focus:border-[#75ff5a]"
                   value={jobRole}
-                  onChange={(event) => setJobRole(event.target.value as JobRole)}
+                  onChange={(event) =>
+                    setJobRole(event.target.value as JobRole)
+                  }
                 >
                   {jobOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -410,7 +447,9 @@ export default function Home() {
               </label>
 
               <label className="block space-y-2">
-                <span className="text-sm font-medium uppercase tracking-[0.14em] text-[#75ff5a]">톤</span>
+                <span className="text-sm font-medium uppercase tracking-[0.14em] text-[#75ff5a]">
+                  톤
+                </span>
                 <select
                   className="w-full border border-[#75ff5a]/60 bg-[#010401] px-4 py-3 text-sm text-[#75ff5a] outline-none transition focus:border-[#75ff5a]"
                   value={tone}
@@ -439,25 +478,34 @@ export default function Home() {
 
         {step === 2 && (
           <section className="border border-[#75ff5a]/80 bg-[#040a04] p-4 sm:p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#75ff5a]/55">[input_module] step 02</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[#75ff5a]">자유형식 경험을 입력합니다.</h2>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#75ff5a]/55">
+              [input_module] step 02
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[#75ff5a]">
+              자유형식 경험을 입력합니다.
+            </h2>
             <p className="mt-2 text-sm leading-7 text-[#d4d4d4]">
               도움말:
               <br />
               <span className="block">ex) SNS 프로젝트를 진행해보았어요.</span>
               <span className="block">ex) 인턴을 해보았어요.</span>
               <span className="mt-2 block text-[#75ff5a]/62">
-                짧은 메모, 실패 경험, 중단한 프로젝트도 입력 가능합니다. 딸깍톤이 역할·과정·역량 관점으로 재정리합니다.
+                짧은 메모, 실패 경험, 중단한 프로젝트도 입력 가능합니다.
+                딸깍톤이 역할·과정·역량 관점으로 재정리합니다.
               </span>
             </p>
 
             <label className="mt-5 block space-y-2">
-              <span className="text-sm font-medium uppercase tracking-[0.14em] text-[#75ff5a]">자유형식 경험</span>
+              <span className="text-sm font-medium uppercase tracking-[0.14em] text-[#75ff5a]">
+                자유형식 경험
+              </span>
               <textarea
                 className="min-h-56 w-full border border-[#75ff5a]/60 bg-[#010401] px-4 py-4 text-sm leading-7 text-[#75ff5a] outline-none transition focus:border-[#75ff5a]"
                 value={rawInput}
                 onChange={(event) => setRawInput(event.target.value)}
-                placeholder={"예:\nSNS 프로젝트를 진행해보았어요.\n인턴을 해보았어요."}
+                placeholder={
+                  "예:\nSNS 프로젝트를 진행해보았어요.\n인턴을 해보았어요."
+                }
               />
             </label>
 
@@ -475,7 +523,9 @@ export default function Home() {
                       key={example}
                       type="button"
                       onClick={() => {
-                        setRawInput((prev) => (prev.trim() ? `${prev}\n${example}` : example));
+                        setRawInput((prev) =>
+                          prev.trim() ? `${prev}\n${example}` : example,
+                        );
                       }}
                       className="block w-full border border-[#75ff5a]/35 bg-transparent px-4 py-3 text-left text-sm text-[#75ff5a] transition hover:bg-[#75ff5a]/8"
                     >
@@ -486,14 +536,18 @@ export default function Home() {
               </div>
 
               <div className="mt-5">
-                <p className="text-sm font-semibold text-[#75ff5a]">공통 예시</p>
+                <p className="text-sm font-semibold text-[#75ff5a]">
+                  공통 예시
+                </p>
                 <div className="mt-3 grid gap-2">
                   {commonExamples.map((example) => (
                     <button
                       key={example}
                       type="button"
                       onClick={() => {
-                        setRawInput((prev) => (prev.trim() ? `${prev}\n${example}` : example));
+                        setRawInput((prev) =>
+                          prev.trim() ? `${prev}\n${example}` : example,
+                        );
                       }}
                       className="border border-[#75ff5a]/35 bg-transparent px-4 py-3 text-left text-sm text-[#75ff5a] transition hover:bg-[#75ff5a]/8"
                     >
@@ -521,6 +575,73 @@ export default function Home() {
               <button
                 type="button"
                 disabled={parsedLines.length === 0}
+                onClick={() => setStep(3)}
+                className="border border-[#75ff5a] bg-[#75ff5a]/10 px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[#75ff5a] transition hover:bg-[#75ff5a]/16 disabled:cursor-not-allowed disabled:border-[#75ff5a]/20 disabled:text-[#75ff5a]/25"
+              >
+                &gt; enrich_sources
+              </button>
+            </div>
+          </section>
+        )}
+
+        {step === 3 && !isGenerating && (
+          <section className="border border-[#75ff5a]/80 bg-[#040a04] p-4 sm:p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#75ff5a]/55">[source_module] step 03</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[#75ff5a]">
+              외부 공개 정보로 입력을 보강합니다.
+            </h2>
+            <p className="mt-2 text-sm leading-7 text-[#d4d4d4]">
+              GitHub 공개 프로필과 개인 블로그 URL이 있으면 같이 넣습니다.
+              <br />
+              LinkedIn은 차단 가능성이 높아 현재는 제외했습니다.
+            </p>
+
+            <div className="mt-5 space-y-4">
+              <label className="block space-y-2">
+                <span className="text-sm font-medium uppercase tracking-[0.14em] text-[#75ff5a]">GitHub ID 또는 URL</span>
+                <input
+                  className="w-full border border-[#75ff5a]/60 bg-[#010401] px-4 py-3 text-sm text-[#75ff5a] outline-none transition focus:border-[#75ff5a]"
+                  value={githubId}
+                  onChange={(event) => setGithubId(event.target.value)}
+                  placeholder="예: m2nhyun 또는 https://github.com/m2nhyun"
+                />
+              </label>
+
+              <label className="block space-y-2">
+                <span className="text-sm font-medium uppercase tracking-[0.14em] text-[#75ff5a]">개인 블로그 URL</span>
+                <input
+                  className="w-full border border-[#75ff5a]/60 bg-[#010401] px-4 py-3 text-sm text-[#75ff5a] outline-none transition focus:border-[#75ff5a]"
+                  value={blogUrl}
+                  onChange={(event) => setBlogUrl(event.target.value)}
+                  placeholder="예: https://your-blog.com"
+                />
+              </label>
+            </div>
+
+            <div className="mt-5 border border-[#75ff5a]/40 bg-[#010401] px-4 py-4 text-sm leading-7 text-[#d4d4d4]">
+              <p className="font-semibold uppercase tracking-[0.14em] text-[#75ff5a]">수집 방식</p>
+              <p className="mt-2">- GitHub: 공개 프로필과 최근 공개 저장소를 읽어 기술 맥락을 보강합니다.</p>
+              <p>- 블로그: 페이지 제목, 설명, 본문 일부를 읽어 관심사와 글감 맥락을 보강합니다.</p>
+              <p>- 둘 다 비워도 결과 생성은 가능합니다.</p>
+            </div>
+
+            {errorMessage && (
+              <div className="mt-5 border border-red-500/60 bg-red-950/30 px-4 py-3 text-sm text-red-300">
+                {errorMessage}
+              </div>
+            )}
+
+            <div className="mt-6 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => setStep(2)}
+                className="border border-[#75ff5a]/45 px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[#75ff5a]/86 transition hover:bg-[#75ff5a]/8"
+              >
+                &lt; back
+              </button>
+              <button
+                type="button"
+                disabled={parsedLines.length === 0}
                 onClick={startGeneration}
                 className="border border-[#75ff5a] bg-[#75ff5a]/10 px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[#75ff5a] transition hover:bg-[#75ff5a]/16 disabled:cursor-not-allowed disabled:border-[#75ff5a]/20 disabled:text-[#75ff5a]/25"
               >
@@ -532,7 +653,9 @@ export default function Home() {
 
         {isGenerating && (
           <section className="border border-[#75ff5a]/80 bg-[#040a04] p-4 text-[#75ff5a] sm:p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#75ff5a]/55">[terminal_window] ai processing</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#75ff5a]/55">
+              [terminal_window] ai processing
+            </p>
             <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[#75ff5a]">
               {loadingStages[Math.min(progressIndex, loadingStages.length - 1)]}
             </h2>
@@ -559,8 +682,12 @@ export default function Home() {
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 animate-spin border-4 border-[#75ff5a]/25 border-t-[#75ff5a]" />
                 <div>
-                  <p className="text-sm font-semibold uppercase text-[#75ff5a]">최종 마감 중</p>
-                  <p className="mt-1 text-sm leading-6 text-[#d4d4d4]">{spinnerLines[spinnerIndex]}</p>
+                  <p className="text-sm font-semibold uppercase text-[#75ff5a]">
+                    최종 마감 중
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-[#d4d4d4]">
+                    {spinnerLines[spinnerIndex]}
+                  </p>
                 </div>
               </div>
             </div>
@@ -570,25 +697,37 @@ export default function Home() {
         {step === 4 && !isGenerating && revealedResult && (
           <>
             <section className="border border-[#75ff5a]/80 bg-[#040a04] p-4 text-[#75ff5a] sm:p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#75ff5a]/55">[terminal_window] output</p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[#75ff5a]">{resultHeading?.title}</h2>
-              <p className="mt-2 text-sm leading-6 text-[#d4d4d4]">{resultHeading?.subtitle}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#75ff5a]/55">
+                [terminal_window] output
+              </p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[#75ff5a]">
+                {resultHeading?.title}
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-[#d4d4d4]">
+                {resultHeading?.subtitle}
+              </p>
 
               <div className="mt-5 flex flex-wrap gap-2">
-                {(["render", "markdown", "text"] as ResultView[]).map((view) => (
-                  <button
-                    key={view}
-                    type="button"
-                    onClick={() => setActiveResultView(view)}
-                    className={`border px-4 py-2 text-sm font-medium uppercase tracking-[0.12em] transition ${
-                      activeResultView === view
-                        ? "border-[#75ff5a] bg-[#75ff5a] text-[#020402]"
-                        : "border-[#75ff5a]/35 bg-transparent text-[#75ff5a]/75 hover:bg-[#75ff5a]/8"
-                    }`}
-                  >
-                    {view === "render" ? "기본 렌더" : view === "markdown" ? "Markdown" : "일반 텍스트"}
-                  </button>
-                ))}
+                {(["render", "markdown", "text"] as ResultView[]).map(
+                  (view) => (
+                    <button
+                      key={view}
+                      type="button"
+                      onClick={() => setActiveResultView(view)}
+                      className={`border px-4 py-2 text-sm font-medium uppercase tracking-[0.12em] transition ${
+                        activeResultView === view
+                          ? "border-[#75ff5a] bg-[#75ff5a] text-[#020402]"
+                          : "border-[#75ff5a]/35 bg-transparent text-[#75ff5a]/75 hover:bg-[#75ff5a]/8"
+                      }`}
+                    >
+                      {view === "render"
+                        ? "기본 렌더"
+                        : view === "markdown"
+                          ? "Markdown"
+                          : "일반 텍스트"}
+                    </button>
+                  ),
+                )}
               </div>
 
               <div className="mt-4 flex flex-wrap gap-3">
@@ -597,7 +736,9 @@ export default function Home() {
                   onClick={() => copyToClipboard("markdown")}
                   className="border border-[#75ff5a]/45 px-4 py-2 text-sm font-semibold uppercase tracking-[0.12em] text-[#75ff5a] transition hover:bg-[#75ff5a]/8"
                 >
-                  {copyState === "markdown" ? "Markdown 복사됨" : "Markdown 복사"}
+                  {copyState === "markdown"
+                    ? "Markdown 복사됨"
+                    : "Markdown 복사"}
                 </button>
                 <button
                   type="button"
@@ -613,37 +754,56 @@ export default function Home() {
                   {tone === "linkedin" && (
                     <>
                       <div className="border border-[#75ff5a]/40 bg-[#010401] p-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">Headline</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">
+                          Headline
+                        </p>
                         <p className="mt-3 text-lg font-semibold leading-8 text-[#75ff5a]">
                           {revealedResult.linkedin.headline}
                         </p>
                       </div>
 
                       <div className="border border-[#75ff5a]/40 bg-[#010401] p-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">About</p>
-                        <p className="mt-3 text-sm leading-7 text-[#d4d4d4]">{revealedResult.linkedin.about}</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">
+                          About
+                        </p>
+                        <p className="mt-3 text-sm leading-7 text-[#d4d4d4]">
+                          {revealedResult.linkedin.about}
+                        </p>
                       </div>
 
                       <div className="border border-[#75ff5a]/40 bg-[#010401] p-4">
                         <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">Experience</p>
-                          <p className="text-xs text-[#75ff5a]/55">{revealedResult.linkedin.experiencePeriod}</p>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">
+                            Experience
+                          </p>
+                          <p className="text-xs text-[#75ff5a]/55">
+                            {revealedResult.linkedin.experiencePeriod}
+                          </p>
                         </div>
                         <p className="mt-3 text-sm font-semibold text-[#75ff5a]">
                           {revealedResult.linkedin.experienceTitle}
                         </p>
                         <div className="mt-3 space-y-3">
-                          {revealedResult.linkedin.experienceBullets.map((bullet, index) => (
-                            <div key={bullet} className="border border-[#75ff5a]/20 bg-transparent px-4 py-3 text-sm leading-7 text-[#d4d4d4]">
-                              <span className="mr-2 text-[#75ff5a]/62">[{index + 1}]</span>
-                              {bullet}
-                            </div>
-                          ))}
+                          {revealedResult.linkedin.experienceBullets.map(
+                            (bullet, index) => (
+                              <div
+                                key={bullet}
+                                className="border border-[#75ff5a]/20 bg-transparent px-4 py-3 text-sm leading-7 text-[#d4d4d4]"
+                              >
+                                <span className="mr-2 text-[#75ff5a]/62">
+                                  [{index + 1}]
+                                </span>
+                                {bullet}
+                              </div>
+                            ),
+                          )}
                         </div>
                       </div>
 
                       <div className="border border-[#75ff5a]/40 bg-[#010401] p-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">Skills</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">
+                          Skills
+                        </p>
                         <div className="mt-3 flex flex-wrap gap-2">
                           {revealedResult.linkedin.skills.map((skill) => (
                             <span
@@ -661,26 +821,39 @@ export default function Home() {
                   {tone === "resume" && (
                     <>
                       <div className="border border-[#75ff5a]/40 bg-[#010401] p-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">직무명</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">
+                          직무명
+                        </p>
                         <p className="mt-3 text-lg font-semibold leading-8 text-[#75ff5a]">
                           {revealedResult.resume.position}
                         </p>
                       </div>
 
                       <div className="border border-[#75ff5a]/40 bg-[#010401] p-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">주요 업무</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">
+                          주요 업무
+                        </p>
                         <div className="mt-3 space-y-3">
-                          {revealedResult.resume.majorResponsibilities.map((item, index) => (
-                            <div key={item} className="border border-[#75ff5a]/20 bg-transparent px-4 py-3 text-sm leading-7 text-[#d4d4d4]">
-                              <span className="mr-2 text-[#75ff5a]/62">[{index + 1}]</span>
-                              {item}
-                            </div>
-                          ))}
+                          {revealedResult.resume.majorResponsibilities.map(
+                            (item, index) => (
+                              <div
+                                key={item}
+                                className="border border-[#75ff5a]/20 bg-transparent px-4 py-3 text-sm leading-7 text-[#d4d4d4]"
+                              >
+                                <span className="mr-2 text-[#75ff5a]/62">
+                                  [{index + 1}]
+                                </span>
+                                {item}
+                              </div>
+                            ),
+                          )}
                         </div>
                       </div>
 
                       <div className="border border-[#75ff5a]/40 bg-[#010401] p-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">성과 요약</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">
+                          성과 요약
+                        </p>
                         <p className="mt-3 text-sm leading-7 text-[#d4d4d4]">
                           {revealedResult.resume.achievementSummary}
                         </p>
@@ -696,7 +869,9 @@ export default function Home() {
                       </div>
 
                       <div className="border border-[#75ff5a]/40 bg-[#010401] p-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">보유 역량</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">
+                          보유 역량
+                        </p>
                         <div className="mt-3 flex flex-wrap gap-2">
                           {revealedResult.resume.competencyTags.map((tag) => (
                             <span
@@ -714,31 +889,46 @@ export default function Home() {
                   {tone === "meme" && (
                     <>
                       <div className="border border-[#75ff5a]/40 bg-[#010401] p-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">포장된 직함</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">
+                          포장된 직함
+                        </p>
                         <p className="mt-3 text-lg font-semibold leading-8 text-[#75ff5a]">
                           {revealedResult.meme.koreanTitle}
                         </p>
-                        <p className="mt-1 text-sm leading-6 text-[#75ff5a]/62">{revealedResult.meme.englishTitle}</p>
+                        <p className="mt-1 text-sm leading-6 text-[#75ff5a]/62">
+                          {revealedResult.meme.englishTitle}
+                        </p>
                         <p className="mt-4 border border-[#75ff5a]/20 bg-transparent px-4 py-3 text-sm leading-7 text-[#d4d4d4]">
                           {revealedResult.meme.oneLiner}
                         </p>
                       </div>
 
                       <div className="border border-[#75ff5a]/40 bg-[#010401] p-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">핵심 역량</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">
+                          핵심 역량
+                        </p>
                         <div className="mt-3 space-y-3">
-                          {revealedResult.meme.capabilityBullets.map((bullet, index) => (
-                            <div key={bullet} className="border border-[#75ff5a]/20 bg-transparent px-4 py-3 text-sm leading-7 text-[#d4d4d4]">
-                              <span className="mr-2 text-[#75ff5a]/62">[{index + 1}]</span>
-                              {bullet}
-                            </div>
-                          ))}
+                          {revealedResult.meme.capabilityBullets.map(
+                            (bullet, index) => (
+                              <div
+                                key={bullet}
+                                className="border border-[#75ff5a]/20 bg-transparent px-4 py-3 text-sm leading-7 text-[#d4d4d4]"
+                              >
+                                <span className="mr-2 text-[#75ff5a]/62">
+                                  [{index + 1}]
+                                </span>
+                                {bullet}
+                              </div>
+                            ),
+                          )}
                         </div>
                       </div>
 
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div className="border border-[#75ff5a]/40 bg-[#010401] p-4">
-                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">현실의 나</p>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">
+                            현실의 나
+                          </p>
                           <div className="mt-3 space-y-2 text-sm leading-7 text-[#d4d4d4]">
                             {revealedResult.meme.realityBlock.map((item) => (
                               <p key={item}>- {item}</p>
@@ -746,7 +936,9 @@ export default function Home() {
                           </div>
                         </div>
                         <div className="border border-[#75ff5a]/40 bg-[#010401] p-4">
-                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">포장된 나</p>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">
+                            포장된 나
+                          </p>
                           <div className="mt-3 space-y-2 text-sm leading-7 text-[#d4d4d4]">
                             {revealedResult.meme.polishedBlock.map((item) => (
                               <p key={item}>- {item}</p>
@@ -756,8 +948,12 @@ export default function Home() {
                       </div>
 
                       <div className="border border-[#75ff5a]/40 bg-[#010401] p-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">한마디</p>
-                        <p className="mt-3 text-sm leading-7 text-[#d4d4d4]">{revealedResult.meme.closingLine}</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#75ff5a]/55">
+                          한마디
+                        </p>
+                        <p className="mt-3 text-sm leading-7 text-[#d4d4d4]">
+                          {revealedResult.meme.closingLine}
+                        </p>
                       </div>
                     </>
                   )}
@@ -767,6 +963,20 @@ export default function Home() {
                       {revealedResult.mismatchNote}
                     </p>
                   )}
+
+                  {revealedResult.sourceNotes &&
+                    revealedResult.sourceNotes.length > 0 && (
+                      <div className="border border-[#75ff5a]/30 bg-[#021302] px-3 py-3 text-sm leading-6 text-[#d4d4d4]">
+                        <p className="font-semibold uppercase tracking-[0.12em] text-[#75ff5a]">
+                          Source Notes
+                        </p>
+                        <div className="mt-2 space-y-1">
+                          {revealedResult.sourceNotes.map((note) => (
+                            <p key={note}>- {note}</p>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                 </div>
               )}
 

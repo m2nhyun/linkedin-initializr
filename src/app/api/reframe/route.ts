@@ -284,6 +284,7 @@ function buildInput(payload: {
   jobRole: JobRole;
   tone: Tone;
   rawInput: string;
+  externalContext: string;
 }) {
   return `
 기획 컨텍스트:
@@ -304,7 +305,166 @@ ${careerPrompt(payload.careerLevel)}
 
 사용자 자유형식 경험:
 ${payload.rawInput}
+
+외부 공개 정보:
+${payload.externalContext}
 `.trim();
+}
+
+function parseGithubId(input: string) {
+  const trimmed = input.trim();
+  if (!trimmed) return "";
+
+  const match = trimmed.match(/github\.com\/([^/?#]+)/i);
+  if (match) return match[1];
+
+  return trimmed.replace(/^@/, "");
+}
+
+function stripHtmlTags(html: string) {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+async function fetchGithubContext(githubId: string) {
+  const notes: string[] = [];
+  if (!githubId) {
+    return { summary: "GitHub 정보 없음", notes };
+  }
+
+  try {
+    const headers: HeadersInit = {
+      Accept: "application/vnd.github+json",
+      "User-Agent": "ddalggakton-app",
+    };
+
+    if (process.env.GITHUB_TOKEN) {
+      headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+    }
+
+    const userResponse = await fetch(`https://api.github.com/users/${githubId}`, {
+      headers,
+      cache: "no-store",
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (!userResponse.ok) {
+      notes.push(`GitHub 공개 프로필을 읽지 못했습니다: ${githubId}`);
+      return { summary: "GitHub 공개 프로필 조회 실패", notes };
+    }
+
+    const user = (await userResponse.json()) as {
+      login?: string;
+      name?: string;
+      bio?: string;
+      public_repos?: number;
+      followers?: number;
+    };
+
+    const reposResponse = await fetch(
+      `https://api.github.com/users/${githubId}/repos?sort=updated&per_page=5`,
+      {
+        headers,
+        cache: "no-store",
+        signal: AbortSignal.timeout(5000),
+      },
+    );
+
+    const repos = reposResponse.ok
+      ? ((await reposResponse.json()) as Array<{
+          name?: string;
+          language?: string;
+          stargazers_count?: number;
+          description?: string;
+        }>)
+      : [];
+
+    const repoSummary = repos
+      .slice(0, 3)
+      .map((repo) => {
+        const parts = [repo.name, repo.language].filter(Boolean);
+        return parts.join(" / ");
+      })
+      .filter(Boolean)
+      .join(", ");
+
+    return {
+      summary: [
+        `GitHub ID: ${user.login ?? githubId}`,
+        user.name ? `이름: ${user.name}` : "",
+        user.bio ? `Bio: ${user.bio}` : "",
+        typeof user.public_repos === "number" ? `공개 저장소 수: ${user.public_repos}` : "",
+        typeof user.followers === "number" ? `팔로워 수: ${user.followers}` : "",
+        repoSummary ? `최근 공개 저장소: ${repoSummary}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+      notes,
+    };
+  } catch {
+    notes.push(`GitHub 공개 정보를 읽는 중 오류가 발생했습니다: ${githubId}`);
+    return { summary: "GitHub 공개 프로필 조회 실패", notes };
+  }
+}
+
+async function fetchBlogContext(blogUrl: string) {
+  const notes: string[] = [];
+  const trimmed = blogUrl.trim();
+  if (!trimmed) {
+    return { summary: "블로그 정보 없음", notes };
+  }
+
+  try {
+    const response = await fetch(trimmed, {
+      headers: {
+        "User-Agent": "ddalggakton-app",
+      },
+      cache: "no-store",
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (!response.ok) {
+      notes.push(`블로그 URL을 읽지 못했습니다: ${trimmed}`);
+      return { summary: "블로그 페이지 조회 실패", notes };
+    }
+
+    const html = await response.text();
+    const title = html.match(/<title[^>]*>(.*?)<\/title>/i)?.[1]?.trim() ?? "";
+    const description =
+      html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)?.[1]?.trim() ??
+      html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i)?.[1]?.trim() ??
+      "";
+    const excerpt = stripHtmlTags(html).slice(0, 400);
+
+    return {
+      summary: [
+        `블로그 URL: ${trimmed}`,
+        title ? `페이지 제목: ${title}` : "",
+        description ? `설명: ${description}` : "",
+        excerpt ? `본문 요약: ${excerpt}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+      notes,
+    };
+  } catch {
+    notes.push(`블로그 페이지를 읽는 중 오류가 발생했습니다: ${trimmed}`);
+    return { summary: "블로그 페이지 조회 실패", notes };
+  }
+}
+
+async function buildExternalContext(payload: { githubId?: string; blogUrl?: string }) {
+  const github = await fetchGithubContext(parseGithubId(payload.githubId ?? ""));
+  const blog = await fetchBlogContext(payload.blogUrl ?? "");
+
+  return {
+    summary: [github.summary, blog.summary].filter(Boolean).join("\n\n"),
+    notes: [...github.notes, ...blog.notes],
+  };
 }
 
 function normalizeResult(result: unknown, tone: Tone) {
@@ -392,11 +552,18 @@ export async function POST(request: Request) {
       jobRole?: JobRole;
       tone?: Tone;
       rawInput?: string;
+      githubId?: string;
+      blogUrl?: string;
     };
 
     if (!body.careerLevel || !body.jobRole || !body.tone || !body.rawInput) {
       return NextResponse.json({ error: "필수 입력값이 부족합니다." }, { status: 400 });
     }
+
+    const externalContext = await buildExternalContext({
+      githubId: body.githubId,
+      blogUrl: body.blogUrl,
+    });
 
     const response = await client.responses.create({
       model: process.env.OPENAI_MODEL ?? "gpt-5-mini",
@@ -406,6 +573,7 @@ export async function POST(request: Request) {
         jobRole: body.jobRole,
         tone: body.tone,
         rawInput: body.rawInput,
+        externalContext: externalContext.summary,
       }),
       text: {
         format: {
@@ -418,7 +586,7 @@ export async function POST(request: Request) {
     });
 
     const result = normalizeResult(JSON.parse(response.output_text), body.tone);
-    return NextResponse.json({ result });
+    return NextResponse.json({ result: { ...result, sourceNotes: externalContext.notes } });
   } catch (error) {
     const message = error instanceof Error ? error.message : "OpenAI 요청 처리 중 오류가 발생했습니다.";
     return NextResponse.json({ error: message }, { status: 500 });
